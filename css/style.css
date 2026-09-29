@@ -1,0 +1,371 @@
+/* ==========================================================================
+   Curvas Estética · Jozzy Lima
+   Base: versão estática e legível (sem JS ou com movimento reduzido).
+   html.motion: cenas fixas controladas pelo scroll.
+   ========================================================================== */
+
+:root {
+  --leite: #f7f4f1;     /* parede branca da recepção */
+  --nevoa: #ebe5f1;     /* lilás bem claro */
+  --lavanda: #b9a8d8;   /* lilás do espaço */
+  --lilas: #6f5a9e;     /* ações (branco sobre ele: 5,8:1) */
+  --ameixa: #3d2c57;    /* fundo escuro */
+  --madeira: #c4a07a;   /* pinus do calendário: linhas e detalhes */
+  --tinta: #2b2433;
+  --tinta-2: #5b5263;   /* secundário sobre leite (6,9:1) */
+  --claro-2: #d3cadf;   /* secundário sobre ameixa (9:1) */
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Figtree', 'Segoe UI', sans-serif;
+  --lado: clamp(1.1rem, 5vw, 5rem);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+body {
+  margin: 0; background: var(--leite); color: var(--tinta);
+  font-family: var(--sans); font-size: clamp(1.06rem, 1rem + .25vw, 1.2rem); line-height: 1.6;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+h1, h2, h3, p, ol, dl, dd, figure, blockquote { margin: 0; }
+ol { padding: 0; list-style: none; }
+img { display: block; max-width: 100%; }
+a { color: inherit; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.serif, h1, h2, h3 { font-variation-settings: 'SOFT' 100; }
+
+:focus-visible { outline: 3px solid var(--lilas); outline-offset: 3px; border-radius: 4px; }
+.cena-proc :focus-visible, .cena-como :focus-visible, .mapa :focus-visible { outline-color: var(--lavanda); }
+
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.pular { position: fixed; z-index: 300; top: .75rem; left: .75rem; padding: .7rem 1rem; background: var(--ameixa); color: #fff; transform: translateY(-180%); }
+.pular:focus { transform: none; }
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.line { overflow: hidden; padding-bottom: .08em; margin-bottom: -.08em; }
+.word, .char { display: inline-block; }
+
+/* ---------- Fotos e espaço reservado ---------- */
+.frame { position: relative; overflow: hidden; background: var(--nevoa); }
+.frame img { width: 100%; height: 100%; object-fit: cover; }
+.frame.vazio img { visibility: hidden; }
+.frame.vazio::after {
+  content: attr(data-rotulo); position: absolute; inset: 0; display: grid; place-items: center; padding: 1rem; text-align: center;
+  font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--tinta-2);
+}
+
+/* ---------- Preloader ---------- */
+.pre { display: none; }
+html.motion .pre {
+  display: grid; place-items: center; align-content: center; gap: 1.2rem;
+  position: fixed; inset: 0; z-index: 200; background: var(--leite); pointer-events: none;
+}
+.pre-c { width: min(46vw, 220px); overflow: visible; }
+.pre-traco { fill: none; stroke: var(--ameixa); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.pre-num { font-family: var(--serif); font-style: italic; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+
+/* ---------- Interface fixa ---------- */
+.topo {
+  position: fixed; inset: 0 0 auto; z-index: 90; display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem var(--lado); pointer-events: none;
+}
+.topo > * { pointer-events: auto; }
+.marca {
+  display: flex; align-items: baseline; gap: .6rem; text-decoration: none; color: var(--ameixa);
+  background: var(--leite); padding: .35rem .9rem .45rem; border-radius: 999px;
+}
+.marca-nome { font-family: var(--serif); font-variation-settings: 'SOFT' 100; font-style: italic; font-size: 1.45rem; line-height: 1; }
+.marca-sub { font-size: .85rem; color: var(--tinta-2); }
+.menu-btn {
+  min-height: 44px; padding: 0 1.2rem; border-radius: 999px; background: var(--leite); color: var(--ameixa);
+  font-weight: 600; border: 1px solid rgba(61, 44, 87, .18);
+}
+
+.prog { position: fixed; z-index: 80; right: clamp(.4rem, 1.4vw, 1.4rem); top: 50%; width: 30px; height: 52vh; transform: translateY(-50%); }
+html:not(.motion) .prog { display: none; }
+.prog-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.prog-base, .prog-cheio { fill: none; stroke-linecap: round; }
+.prog-base { stroke: rgba(111, 90, 158, .3); stroke-width: 1.5; }
+.prog-cheio { stroke: var(--lilas); stroke-width: 2.5; }
+.prog-pontos li { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; }
+.prog-pontos button { width: 100%; height: 100%; display: grid; place-items: center; }
+.prog-pontos button::before {
+  content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--leite); border: 1.5px solid var(--lilas); transition: transform .3s;
+}
+.prog-pontos .atual button::before { background: var(--lilas); transform: scale(1.35); }
+.prog-pontos .rotulo {
+  position: absolute; right: 34px; top: 50%; transform: translateY(-50%); white-space: nowrap; pointer-events: none;
+  background: var(--ameixa); color: #fff; font-size: .9rem; padding: .2rem .65rem; border-radius: 999px; opacity: 0; transition: opacity .25s;
+}
+.prog-pontos button:hover .rotulo, .prog-pontos button:focus-visible .rotulo { opacity: 1; }
+
+.mapa { position: fixed; inset: 0; z-index: 150; background: var(--ameixa); color: #fff; overflow-y: auto; }
+.mapa[hidden] { display: none; }
+.mapa-dentro { min-height: 100%; display: grid; align-content: space-between; gap: 2.5rem; padding: 5.5rem var(--lado) 2rem; }
+.mapa-fechar { position: absolute; top: 1rem; right: var(--lado); min-height: 44px; padding: 0 1.2rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.4); font-weight: 600; }
+.mapa-lista a {
+  display: flex; align-items: center; gap: 1.1rem; padding: .45rem 0; text-decoration: none;
+  font-family: var(--serif); font-variation-settings: 'SOFT' 100; font-weight: 300; font-size: clamp(1.9rem, 5.2vw, 4.2rem); line-height: 1.1;
+}
+.mapa-lista a:hover .mapa-nome { font-style: italic; }
+.mapa-n { font-family: var(--sans); font-size: .95rem; color: var(--claro-2); min-width: 1.6rem; }
+.aqui { margin-left: auto; font-family: var(--sans); font-size: .95rem; background: var(--leite); color: var(--ameixa); padding: .2rem .7rem; border-radius: 999px; white-space: nowrap; }
+.mapa-pe { color: var(--claro-2); }
+
+.zap {
+  position: fixed; z-index: 85; right: clamp(.9rem, 2vw, 1.8rem); bottom: clamp(.9rem, 2vw, 1.8rem);
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--lilas); color: #fff; transition: transform .4s;
+}
+.zap:hover { transform: scale(1.06); }
+.zap svg { width: 26px; height: 26px; }
+
+/* ==========================================================================
+   CENAS — base estática
+   ========================================================================== */
+.cena { position: relative; }
+.tit { font-family: var(--serif); font-weight: 300; }
+
+/* 1 · Abertura */
+.cena-abertura .palco { position: relative; padding: 7rem var(--lado) 4rem; }
+.hero-foto { aspect-ratio: 1010 / 415; border-radius: 40% 60% 55% 45% / 60% 45% 55% 40%; margin-bottom: 2.5rem; }
+.hero-tit { font-weight: 300; }
+.hero-nome { display: block; font-family: var(--serif); font-variation-settings: 'SOFT' 100; font-style: italic; font-weight: 300; font-size: clamp(4.5rem, 17vw, 16rem); line-height: .85; color: var(--ameixa); letter-spacing: -.02em; }
+.hero-sub { display: block; font-family: var(--serif); font-variation-settings: 'SOFT' 100; font-size: clamp(1.4rem, 2.6vw, 2.4rem); margin-top: .6rem; color: var(--tinta); }
+.hero-com { font-style: italic; }
+.hero-linha { margin-top: 1.4rem; max-width: 30ch; color: var(--tinta-2); font-size: 1.15em; }
+.onda { display: none; }
+
+/* 2 · Jozzy */
+.cena-jozzy { padding: 5rem var(--lado); }
+.cena-jozzy .palco { display: grid; gap: 3rem; align-items: center; }
+.arco { position: relative; width: min(78vw, 400px); }
+.arco-foto { aspect-ratio: 100 / 140; border-radius: 50% 50% 0 0 / 34% 34% 0 0; }
+.arco-linha { display: none; }
+.jozzy-tit { font-family: var(--serif); font-weight: 300; font-size: clamp(2.6rem, 6vw, 5.6rem); line-height: .95; color: var(--ameixa); }
+.jozzy-nome { margin-top: 1.4rem; font-weight: 600; font-size: 1.15em; }
+.jozzy-nome span { display: block; font-weight: 400; color: var(--tinta-2); font-size: .9em; }
+.jozzy-fala { margin-top: 1.6rem; padding-left: 1.2rem; border-left: 2px solid var(--madeira); }
+.jozzy-fala p { font-family: var(--serif); font-variation-settings: 'SOFT' 100; font-style: italic; font-weight: 300; font-size: clamp(1.35rem, 2vw, 1.9rem); line-height: 1.35; max-width: 30ch; }
+.jozzy-extra { margin-top: 1.4rem; color: var(--tinta-2); }
+.escurece { display: none; }
+
+/* 3 · Procedimentos */
+.cena-proc { background: var(--ameixa); color: #fff; padding: 5rem var(--lado); }
+.proc-tit { font-family: var(--serif); font-weight: 300; font-size: clamp(2.6rem, 6vw, 5.6rem); line-height: 1; margin-bottom: 3rem; }
+.proc-fio, .horizonte { display: none; }
+.proc-lista { display: grid; gap: 4.5rem; }
+.proc { display: grid; gap: 1.6rem; }
+.proc-foto { width: min(72vw, 340px); aspect-ratio: 3 / 4; border-radius: 50%; }
+.proc-n { font-size: .95rem; color: var(--claro-2); }
+.proc-nome { font-family: var(--serif); font-weight: 300; font-size: clamp(2.2rem, 4.8vw, 4.6rem); line-height: 1; margin: .3rem 0 1.2rem; }
+.proc-dados { display: grid; gap: .9rem; max-width: 42ch; }
+.proc-dados div { display: grid; grid-template-columns: 5.6rem 1fr; gap: .8rem; }
+.proc-dados dt { font-family: var(--serif); font-style: italic; color: var(--madeira); }
+.proc-dados dd { color: var(--claro-2); }
+
+/* 4 · Frase */
+.cena-frase { background: var(--nevoa); padding: 7rem var(--lado); overflow: hidden; }
+.curvas-fundo { display: none; }
+.frase-txt { font-family: var(--serif); font-variation-settings: 'SOFT' 100; font-weight: 300; font-size: clamp(2.4rem, 6.4vw, 7rem); line-height: 1.05; color: var(--ameixa); max-width: 17ch; }
+
+/* 5 · Espaço */
+.cena-espaco { padding: 6rem var(--lado); }
+.trilho { display: grid; gap: 3.5rem; }
+.espaco-tit { font-family: var(--serif); font-weight: 300; font-size: clamp(3rem, 8vw, 8rem); line-height: .9; color: var(--ameixa); }
+.espaco-abre p { margin-top: 1.2rem; max-width: 28ch; color: var(--tinta-2); }
+.sala .frame { border-radius: 999px; aspect-ratio: 16 / 9; }
+.sala-b .frame { aspect-ratio: 3 / 4; border-radius: 999px 999px 24px 24px; }
+.sala-c .frame { aspect-ratio: 4 / 3; border-radius: 48% 52% 46% 54% / 55% 45% 55% 45%; }
+.sala-d .frame { aspect-ratio: 1; border-radius: 50%; }
+.frame-calendario img { object-position: 57% 55%; transform: scale(2.2); transform-origin: 57% 55%; }
+.sala figcaption { margin-top: .9rem; color: var(--tinta-2); max-width: 30ch; }
+
+/* 6 · Como funciona */
+.cena-como { background: var(--ameixa); color: #fff; padding: 6rem var(--lado); }
+.pincel { display: none; }
+.como-tit { font-family: var(--serif); font-weight: 300; font-size: clamp(2.6rem, 6vw, 5.6rem); line-height: 1; margin-bottom: 3rem; }
+.passos-fio { display: none; }
+.passos-lista { display: grid; gap: 2.4rem; }
+.passo { display: grid; grid-template-columns: 3.4rem 1fr; gap: .2rem 1rem; }
+.passo-n {
+  grid-row: span 2; width: 3.4rem; height: 3.4rem; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--madeira); font-family: var(--serif); font-size: 1.5rem; color: var(--madeira);
+}
+.passo h3 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.3rem); line-height: 1.1; }
+.passo p { color: var(--claro-2); max-width: 34ch; }
+
+/* 7 · Agendar */
+.cena-agendar { background: var(--leite); }
+.agendar-grade { display: grid; gap: 3rem; padding: 6rem var(--lado) 0; }
+.agendar-tit { font-family: var(--serif); font-weight: 300; font-style: italic; font-size: clamp(3rem, 8vw, 8rem); line-height: .9; color: var(--ameixa); }
+.agendar-lead { margin-top: 1.4rem; max-width: 32ch; color: var(--tinta-2); font-size: 1.15em; }
+.btn-agendar {
+  display: inline-flex; align-items: center; min-height: 58px; margin: 2rem 0 2.6rem; padding: 1rem 1.8rem;
+  background: var(--lilas); color: #fff; text-decoration: none; font-weight: 600; font-size: 1.1rem; border-radius: 999px;
+  transition: background .3s;
+}
+.btn-agendar:hover { background: var(--ameixa); }
+.dados { display: grid; gap: 1rem; }
+.dados div { display: grid; grid-template-columns: 6.4rem 1fr; gap: 1rem; padding-top: .9rem; border-top: 1px solid rgba(61, 44, 87, .15); }
+.dados dt { font-family: var(--serif); font-style: italic; color: var(--lilas); }
+.dados dd { color: var(--tinta); }
+.agendar-mapa { height: 62svh; min-height: 360px; border-radius: 40% 40% 0 0 / 14% 14% 0 0; overflow: hidden; margin: 0 calc(var(--lado) * -1); }
+.agendar-mapa iframe { width: 100%; height: 100%; border: 0; filter: grayscale(.85) sepia(.12); }
+.rodape { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem 2rem; padding: 3rem var(--lado) 6.5rem; color: var(--tinta-2); font-size: 1rem; }
+.rodape-marca { font-family: var(--serif); font-style: italic; font-size: 1.6rem; color: var(--ameixa); margin-right: auto; }
+.rodape-marca span { font-family: var(--sans); font-style: normal; font-size: .9rem; color: var(--tinta-2); }
+
+@media (min-width: 900px) {
+  .cena-jozzy .palco { grid-template-columns: auto 1fr; gap: 6vw; }
+  .proc { grid-template-columns: auto 1fr; align-items: center; gap: 5vw; }
+  .trilho { grid-template-columns: 1fr 1fr; align-items: end; }
+  .agendar-grade { grid-template-columns: 1fr 1fr; gap: 5vw; padding-top: 0; }
+  .agendar-info { padding: 8rem 0 5rem; }
+  .agendar-mapa { margin: 3rem calc(var(--lado) * -1) 0 0; height: auto; min-height: 88vh; border-radius: 50% 0 0 0 / 22% 0 0 0; }
+}
+
+/* ==========================================================================
+   CENAS — versão cinematográfica
+   ========================================================================== */
+html.motion .topo, html.motion .zap, html.motion .prog { opacity: 0; }
+html.motion .palco { position: relative; height: 100svh; overflow: hidden; }
+html.motion .cena-jozzy, html.motion .cena-proc, html.motion .cena-frase,
+html.motion .cena-espaco, html.motion .cena-como { padding: 0; }
+
+/* 1 · Abertura */
+html.motion .cena-abertura .palco { padding: 0; }
+html.motion .hero-foto {
+  position: absolute; inset: 0; margin: 0; aspect-ratio: auto; border-radius: 0;
+  clip-path: url(#bolha); -webkit-clip-path: url(#bolha);
+}
+html.motion .hero-foto img { object-position: 60% 50%; transform: scale(1.12); }
+html.motion .hero-tit { position: absolute; z-index: 3; left: var(--lado); bottom: 9vh; }
+html.motion .hero-nome { font-size: clamp(5rem, 19vw, 19rem); }
+html.motion .hero-linha { position: absolute; z-index: 3; right: calc(var(--lado) + 3rem); top: 22vh; max-width: 24ch; margin: 0; text-align: right; }
+html.motion .onda { display: block; position: absolute; left: 0; right: 0; top: 100%; z-index: 6; height: 125svh; pointer-events: none; }
+html.motion .onda svg { display: block; width: 100%; height: 12vh; fill: var(--leite); }
+html.motion .onda-corpo { height: calc(100% - 12vh + 1px); margin-top: -1px; background: var(--leite); }
+
+/* 2 · Jozzy */
+html.motion .cena-jozzy .palco { display: block; }
+html.motion .arco { position: absolute; left: 14vw; top: 50%; width: min(30vw, 58vh); transform: translateY(-50%); }
+html.motion .arco-foto { clip-path: inset(100% 0 0 0 round 50% 50% 0 0 / 34% 34% 0 0); border-radius: 0; }
+html.motion .arco-linha { display: block; position: absolute; inset: -14px; width: calc(100% + 28px); height: calc(100% + 14px); overflow: visible; }
+html.motion .arco-linha path { fill: none; stroke: var(--madeira); stroke-width: 1.5; }
+html.motion .jozzy-txt { position: absolute; left: 52vw; right: calc(var(--lado) + 3rem); top: 50%; transform: translateY(-50%); }
+html.motion .jozzy-nome, html.motion .jozzy-extra { opacity: 0; }
+html.motion .jozzy-fala { clip-path: inset(0 0 100% 0); }
+html.motion .escurece { display: block; position: absolute; inset: 0; z-index: 8; background: var(--ameixa); opacity: 0; }
+
+/* 3 · Procedimentos */
+html.motion .cena-proc .palco { background: var(--ameixa); }
+html.motion .proc-tit { position: absolute; z-index: 3; left: var(--lado); top: 5.5rem; margin: 0; font-size: clamp(1.4rem, 2vw, 1.9rem); font-style: italic; }
+html.motion .proc-fio { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+html.motion .proc-fio path { fill: none; stroke: var(--madeira); stroke-width: 1.4; opacity: .8; }
+html.motion .proc-lista { position: absolute; inset: 0; display: block; }
+html.motion .proc { position: absolute; inset: 0; display: block; }
+html.motion .proc-foto { position: absolute; left: 12vw; top: 50%; height: 70vh; width: auto; aspect-ratio: 3 / 4; margin-top: -35vh; border-radius: 0; clip-path: ellipse(0% 0% at 50% 50%); }
+html.motion .proc-txt { position: absolute; left: 52vw; right: calc(var(--lado) + 3rem); top: 50%; transform: translateY(-50%); }
+html.motion .proc-nome { font-size: clamp(2.6rem, 5.4vw, 5.8rem); }
+html.motion .proc-n, html.motion .proc-dados { opacity: 0; }
+html.motion .horizonte { display: block; position: absolute; inset: 0; z-index: 9; background: var(--nevoa); clip-path: inset(50% 0 50% 0); }
+
+/* 4 · Frase */
+html.motion .cena-frase .palco { background: var(--nevoa); display: grid; place-items: center; }
+html.motion .curvas-fundo { display: block; position: absolute; top: 0; left: 0; height: 100%; width: 160%; }
+html.motion .curvas-fundo path { fill: none; stroke: var(--lavanda); stroke-width: 2; }
+html.motion .curvas-fundo path:nth-child(2) { stroke: var(--madeira); stroke-width: 1.5; }
+html.motion .frase { position: relative; z-index: 2; padding: 0 var(--lado); }
+html.motion .frase-txt { max-width: 15ch; }
+
+/* 5 · Espaço — horizontal no desktop */
+@media (min-width: 769px) {
+  html.motion .cena-espaco .palco { background: var(--leite); }
+  html.motion .trilho {
+    display: flex; align-items: center; gap: 6vw; height: 100%; width: max-content;
+    padding: 0 14vw 0 var(--lado); grid-template-columns: none;
+  }
+  html.motion .espaco-abre { width: 34vw; }
+  html.motion .sala { flex: none; }
+  html.motion .sala .frame { height: 56vh; }
+  html.motion .sala-a { align-self: flex-end; margin-bottom: 12vh; }
+  html.motion .sala-b .frame { height: 72vh; }
+  html.motion .sala-c { align-self: flex-start; margin-top: 14vh; }
+  html.motion .sala-c .frame { height: 50vh; }
+  html.motion .sala-d .frame { height: 44vh; }
+  html.motion .sala .frame { clip-path: ellipse(0% 0% at 50% 50%); }
+}
+
+/* 6 · Como funciona */
+html.motion .cena-como .palco { background: var(--leite); }
+html.motion .pincel { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+html.motion .pincel path { fill: none; stroke: var(--ameixa); stroke-width: 1400; stroke-linecap: round; }
+html.motion .como-dentro { position: absolute; inset: 0; padding: 7rem var(--lado) 0 calc(var(--lado) + 1rem); }
+html.motion .como-tit { opacity: 1; }
+html.motion .passos { position: relative; margin-top: 6vh; }
+html.motion .passos-fio { display: block; position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 22vh; overflow: visible; }
+html.motion .passos-fio path { fill: none; stroke: var(--madeira); stroke-width: 1.6; }
+html.motion .passos-lista { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vw; padding-top: 0; }
+html.motion .passo { display: block; }
+html.motion .passo:nth-child(1) { padding-top: calc(11vh - 1.7rem); }
+html.motion .passo:nth-child(2) { padding-top: calc(11vh - 1.7rem); margin-left: 4vw; }
+html.motion .passo:nth-child(3) { padding-top: calc(11vh - 1.7rem); margin-left: 6vw; }
+html.motion .passo-n { background: var(--ameixa); margin-bottom: 1.2rem; transform: scale(0); }
+html.motion .passo h3, html.motion .passo p { opacity: 0; }
+html.motion .passo p { margin-top: .6rem; }
+
+/* 7 · Agendar sobe por cima */
+html.motion .cena-agendar { position: relative; z-index: 2; border-radius: 48px 48px 0 0; margin-top: -100svh; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 768px) {
+  .prog { top: 0; left: 0; right: 0; width: auto; height: 14px; transform: none; }
+  .prog-pontos { display: none; }
+  .marca-sub { display: none; }
+
+  html.motion .hero-tit { bottom: calc(4.5vh + 6.2rem); }
+  html.motion .hero-nome { font-size: 25vw; }
+  html.motion .hero-linha { left: var(--lado); right: var(--lado); top: auto; bottom: 4.5vh; text-align: left; font-size: 1rem; }
+  html.motion .hero-foto img { object-position: 57% 50%; }
+
+  html.motion .arco { left: 50%; top: 5.5rem; width: 50vw; transform: translateX(-50%); }
+  html.motion .jozzy-txt { left: var(--lado); right: var(--lado); top: auto; bottom: 5vh; transform: none; }
+  html.motion .jozzy-tit { font-size: 2.2rem; }
+  html.motion .jozzy-nome { margin-top: .7rem; }
+  html.motion .jozzy-fala { margin-top: .8rem; }
+  html.motion .jozzy-fala p { font-size: 1.15rem; }
+  html.motion .jozzy-extra { display: none; }
+
+  html.motion .proc-tit { top: 4.8rem; }
+  html.motion .proc-foto { left: 50%; top: 8.5rem; height: 38vh; margin: 0; transform: translateX(-50%); }
+  html.motion .proc-txt { left: var(--lado); right: var(--lado); top: auto; bottom: 4vh; transform: none; }
+  html.motion .proc-nome { font-size: 2.4rem; margin-bottom: .8rem; }
+  html.motion .proc-dados { gap: .5rem; }
+  html.motion .proc-dados div { grid-template-columns: 4.8rem 1fr; }
+  html.motion .proc-dados dd { font-size: 1rem; }
+
+  html.motion .curvas-fundo { width: 320%; }
+
+  html.motion .cena-espaco .palco { height: auto; overflow: visible; padding: 6rem var(--lado); }
+  html.motion .sala .frame { clip-path: ellipse(30% 20% at 50% 50%); }
+  html.motion .sala-b, html.motion .sala-d { width: 78%; margin-left: auto; }
+
+  html.motion .como-dentro { padding: 5.5rem var(--lado) 0; }
+  html.motion .como-tit { font-size: 2.6rem; margin-bottom: 1.6rem; }
+  html.motion .passos { margin-top: 0; }
+  html.motion .passos-fio { display: none; }
+  html.motion .passos-lista { grid-template-columns: 1fr; gap: 1.6rem; }
+  html.motion .passo { display: grid; padding-top: 0 !important; margin-left: 0 !important; }
+  html.motion .passo-n { margin-bottom: 0; }
+  html.motion .passo h3 { font-size: 1.6rem; }
+  html.motion .passo p { font-size: 1rem; margin-top: .2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

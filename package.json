@@ -1,0 +1,12 @@
+{
+  "name": "curvas-estetica",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "otimizar": "node scripts/otimizar.mjs",
+    "dev": "npx --yes serve . -l 4340"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}
